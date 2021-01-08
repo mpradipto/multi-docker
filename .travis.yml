@@ -1,0 +1,25 @@
+sudo: required
+language: generic
+
+services:
+  - docker
+
+before_install:
+  - docker build -t mpradipto/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true mpradipto/react-test npm test 
+
+after_success:
+  - docker build -t mpradipto/multi-client ./client
+  - docker build -t mpradipto/multi-server ./server
+  - docker build -t mpradipto/multi-worker ./worker
+  - docker build -t mpradipto/multi-nginx ./nginx
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push mpradipto/multi-client
+  - docker push mpradipto/multi-server
+  - docker push mpradipto/multi-worker
+  - docker push mpradipto/multi-nginx
+
